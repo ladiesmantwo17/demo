@@ -1,0 +1,300 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>엔트리 수행평가 연습</title>
+<style>
+:root{--bg:#f5f7fb;--card:#fff;--ink:#1d2433;--sub:#667085;--line:#e4e7ec;--pri:#2b6ef3;--ok:#12a150;--no:#e5484d}
+*{box-sizing:border-box}
+body{margin:0;font-family:-apple-system,BlinkMacSystemFont,"Apple SD Gothic Neo","Noto Sans KR",sans-serif;background:var(--bg);color:var(--ink);line-height:1.5}
+header{position:sticky;top:0;z-index:5;background:#fff;border-bottom:1px solid var(--line)}
+.top{max-width:760px;margin:0 auto;padding:12px 16px 0}
+h1{font-size:18px;margin:0 0 8px}
+.tabs{display:flex;gap:4px}
+.tab{flex:1;border:0;background:none;padding:10px 4px;font-size:15px;font-weight:600;color:var(--sub);border-bottom:3px solid transparent;cursor:pointer}
+.tab.on{color:var(--pri);border-color:var(--pri)}
+main{max-width:760px;margin:0 auto;padding:16px}
+.card{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:16px;margin-bottom:14px}
+.meta{display:flex;justify-content:space-between;align-items:center;font-size:13px;color:var(--sub);margin-bottom:8px}
+.chip{display:inline-block;background:#eef3ff;color:var(--pri);padding:2px 9px;border-radius:99px;font-size:12px;font-weight:600}
+.bar{height:6px;background:var(--line);border-radius:9px;overflow:hidden;margin-bottom:14px}
+.bar i{display:block;height:100%;background:var(--pri);transition:width .3s}
+.q{font-size:16px;font-weight:600;margin:6px 0 12px}
+.code{background:#fafbfc;border:1px dashed #d0d5dd;border-radius:10px;padding:12px;overflow-x:auto;margin-bottom:14px}
+.objname{font-size:12px;font-weight:700;color:var(--sub);margin:4px 0 6px}
+.obj+.obj{margin-top:14px;padding-top:12px;border-top:1px dashed #d0d5dd}
+/* blocks */
+.stack{display:flex;flex-direction:column;align-items:flex-start;gap:3px}
+.blk{color:#fff;border-radius:7px;padding:7px 11px;font-size:14px;font-weight:600;white-space:nowrap;display:inline-flex;align-items:center;gap:4px;flex-wrap:nowrap}
+.cwrap{display:flex;flex-direction:column;align-items:flex-start}
+.cwrap>.blk{border-radius:7px 7px 7px 0}
+.cin{border-left:14px solid;padding:3px 0 3px 4px;min-height:14px}
+.cfoot{width:60px;height:12px;border-radius:0 0 7px 7px}
+.celse{border-radius:0 7px 7px 0 !important;padding:4px 11px !important}
+.v{background:#fff;color:#333;border-radius:99px;padding:1px 9px;font-weight:600;display:inline-block}
+.v .v{background:#f1f1f1}
+.dd{background:rgba(0,0,0,.18);border-radius:5px;padding:1px 7px}
+.v .dd{background:#e9e0f5;color:#7a2fb0}
+.bo{background:#4562f5;color:#fff;border-radius:4px;padding:2px 8px;display:inline-block;clip-path:polygon(8px 0,calc(100% - 8px) 0,100% 50%,calc(100% - 8px) 100%,8px 100%,0 50%);padding:2px 12px}
+.bo .bo{background:#6c84ff}
+.start{background:#00b400}.flow{background:#19baea}.move{background:#a751e3}.look{background:#ec4466}.brush{background:#fc7e01}.calc{background:#e8a400}.judge{background:#4562f5}.data{background:#e457dc}
+.cin.start{border-color:#00b400;background:none}.cin.flow{border-color:#19baea;background:none}
+.hat{border-radius:16px 16px 7px 7px}
+/* answers */
+.opts{display:flex;flex-direction:column;gap:8px}
+.opt{text-align:left;border:1.5px solid var(--line);background:#fff;border-radius:10px;padding:11px 13px;font-size:15px;cursor:pointer;color:var(--ink)}
+.opt.sel{border-color:var(--pri);background:#f3f7ff}
+.opt.right{border-color:var(--ok);background:#ecfbf2}
+.opt.wrong{border-color:var(--no);background:#fff0f0}
+input.num{width:100%;font-size:18px;padding:11px 13px;border:1.5px solid var(--line);border-radius:10px}
+.btns{display:flex;gap:8px;margin-top:14px}
+.btn{flex:1;border:0;border-radius:10px;padding:12px;font-size:15px;font-weight:700;cursor:pointer;background:var(--pri);color:#fff}
+.btn.ghost{background:#eef1f6;color:var(--ink)}
+.btn:disabled{opacity:.4}
+.fb{margin-top:12px;padding:12px;border-radius:10px;font-size:14px}
+.fb.ok{background:#ecfbf2;color:#0b6b37}.fb.no{background:#fff0f0;color:#a3262a}
+.fb b{display:block;margin-bottom:3px;font-size:15px}
+.pool,.ansbox{display:flex;flex-direction:column;gap:6px;align-items:flex-start;min-height:44px;padding:8px;border-radius:10px}
+.pool{background:#f4f5f7}
+.ansbox{background:#fff;border:1.5px dashed #b9c2d0;margin-bottom:10px}
+.ord{cursor:pointer;display:flex;align-items:center;gap:6px}
+.ord .n{font-size:12px;color:var(--sub);width:16px}
+.lbl{font-size:12px;color:var(--sub);font-weight:700;margin:4px 0}
+.ind{padding-left:22px}
+.done{text-align:center}
+.big{font-size:42px;font-weight:800;margin:6px 0}
+details{margin-top:10px}
+summary{cursor:pointer;font-weight:700;color:var(--pri);padding:6px 0}
+.task h3{margin:0 0 6px;font-size:16px}
+.task p{margin:4px 0;font-size:14.5px}
+.req{font-size:14px;padding-left:18px;margin:6px 0}
+.note{font-size:13.5px;color:#444;background:#fff8e6;border-radius:8px;padding:9px 11px;margin-top:8px}
+table{width:100%;border-collapse:collapse;font-size:14px}
+td,th{border-bottom:1px solid var(--line);padding:8px 6px;text-align:left;vertical-align:top}
+th{font-size:13px;color:var(--sub)}
+.dot{display:inline-block;width:11px;height:11px;border-radius:3px;margin-right:6px;vertical-align:-1px}
+ul.tips{padding-left:18px;margin:6px 0;font-size:14.5px}
+ul.tips li{margin:5px 0}
+a{color:var(--pri)}
+.chk{display:flex;align-items:center;gap:8px;font-size:14px;margin-top:10px;color:var(--sub)}
+</style>
+</head>
+<body>
+<header><div class="top">
+<h1>🧩 엔트리 수행평가 연습</h1>
+<div class="tabs">
+<button class="tab on" data-t="quiz">문제 풀기</button>
+<button class="tab" data-t="lab">실습 과제</button>
+<button class="tab" data-t="sum">개념 정리</button>
+</div></div></header>
+<main id="app"></main>
+
+<script>
+// ---------- block renderer ----------
+function esc(s){return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')}
+function fmt(t){
+  let s=esc(t),prev;
+  do{prev=s;s=s.replace(/\{([^{}]*)\}/g,'<span class="v">$1</span>')}while(s!==prev);
+  s=s.replace(/\[([^\[\]]*)\]/g,'<span class="dd">$1 ▾</span>');
+  do{prev=s;s=s.replace(/⟪([^⟪⟫]*)⟫/g,'<span class="bo">$1</span>')}while(s!==prev);
+  return s;
+}
+const B=(c,t,k,e)=>({c,t,k,e});
+const st=t=>B('start',t),fl=(t,k,e)=>B('flow',t,k,e),mv=t=>B('move',t),lk=t=>B('look',t),br=t=>B('brush',t),dt=t=>B('data',t);
+const HAT=['클릭했을 때','받았을 때','눌렀을 때'];
+function rb(b){
+  const isHat=b.c==='start'&&HAT.some(h=>b.t.includes(h));
+  const head=`<div class="blk ${b.c}${isHat?' hat':''}">${fmt(b.t)}</div>`;
+  if(!b.k) return head;
+  let h=`<div class="cwrap">${head}<div class="cin ${b.c}">${rs(b.k)}</div>`;
+  if(b.e) h+=`<div class="blk ${b.c} celse">아니면</div><div class="cin ${b.c}">${rs(b.e)}</div>`;
+  return h+`<div class="cfoot ${b.c}"></div></div>`;
+}
+function rs(a){return `<div class="stack">${a.map(rb).join('')}</div>`}
+function codeHTML(p){
+  if(p.objs) return `<div class="code">${p.objs.map(o=>`<div class="obj"><div class="objname">📦 ${o.n}</div>${rs(o.code)}</div>`).join('')}</div>`;
+  return `<div class="code">${rs(p.code)}</div>`;
+}
+const S0=st('시작하기 버튼을 클릭했을 때');
+
+// ---------- quiz data ----------
+const Q=[
+{tp:'순차·변수',type:'num',q:'실행하면 엔트리봇은 어떤 수를 말할까?',
+ code:[S0,dt('[점수] 를 {0} (으)로 정하기'),dt('[점수] 에 {5} 만큼 더하기'),dt('[점수] 에 {3} 만큼 더하기'),lk('{[점수] 값} 을(를) 말하기')],
+ ans:8,exp:'0 → 5 → 8. "정하기"는 값을 덮어쓰고, "더하기"는 지금 값에 더해.'},
+{tp:'반복',type:'num',q:'실행이 끝난 뒤 오브젝트의 x 좌표는?',
+ code:[S0,mv('x: {0} y: {0} 위치로 이동하기'),fl('{5} 번 반복하기',[mv('x 좌표를 {10} 만큼 바꾸기')])],
+ ans:50,exp:'0에서 시작해서 10씩 5번 → 50.'},
+{tp:'반복·변수',type:'num',q:'엔트리봇이 말하는 값은?',
+ code:[S0,dt('[합계] 를 {0} (으)로 정하기'),dt('[i] 를 {1} (으)로 정하기'),fl('{5} 번 반복하기',[dt('[합계] 에 {[i] 값} 만큼 더하기'),dt('[i] 에 {1} 만큼 더하기')]),lk('{[합계] 값} 을(를) 말하기')],
+ ans:15,exp:'i가 1,2,3,4,5로 바뀌면서 합계에 더해져 1+2+3+4+5 = 15.'},
+{tp:'중첩 반복',type:'num',q:'실행 후 [횟수] 변수의 값은?',
+ code:[S0,dt('[횟수] 를 {0} (으)로 정하기'),fl('{3} 번 반복하기',[fl('{4} 번 반복하기',[dt('[횟수] 에 {1} 만큼 더하기')])])],
+ ans:12,exp:'바깥 3번 × 안쪽 4번 = 12번 실행.'},
+{tp:'조건',type:'mc',q:'엔트리봇은 무엇을 말할까?',
+ code:[S0,dt('[나이] 를 {15} (으)로 정하기'),fl('만일 ⟪{[나이] 값} > {19}⟫ (이)라면',[lk('{성인} 을(를) 말하기')],[lk('{청소년} 을(를) 말하기')])],
+ opts:['성인','청소년','아무 말도 안 함','둘 다 말함'],ans:1,exp:'15 > 19는 거짓 → "아니면" 쪽이 실행돼.'},
+{tp:'조건·나머지',type:'mc',q:'엔트리봇은 무엇을 말할까?',
+ code:[S0,dt('[수] 를 {7} (으)로 정하기'),fl('만일 ⟪{{[수] 값} / {2} 의 [나머지]} = {0}⟫ (이)라면',[lk('{짝수} 을(를) 말하기')],[lk('{홀수} 을(를) 말하기')])],
+ opts:['짝수','홀수','3','1'],ans:1,exp:'7 ÷ 2의 나머지는 1. 0이 아니니까 "홀수". 짝/홀 판별은 "2로 나눈 나머지 = 0"이 단골 문제!'},
+{tp:'~될 때까지 반복',type:'num',q:'엔트리봇이 말하는 값은?',
+ code:[S0,dt('[카운트] 를 {0} (으)로 정하기'),fl('⟪{[카운트] 값} > {4}⟫ 이 될 때까지 반복하기',[dt('[카운트] 에 {2} 만큼 더하기')]),lk('{[카운트] 값} 을(를) 말하기')],
+ ans:6,exp:'0→2→4→6. 4일 때는 아직 "4 > 4"가 거짓이라 한 번 더 돌고, 6이 되면 참이 돼서 멈춰.'},
+{tp:'계속 반복·키보드',type:'mc',q:'이 코드는 어떻게 동작할까?',
+ code:[S0,fl('계속 반복하기',[fl('만일 ⟪[오른쪽 화살표] 키가 눌러져 있는가?⟫ (이)라면',[mv('x 좌표를 {5} 만큼 바꾸기')])])],
+ opts:['시작하자마자 오른쪽으로 계속 움직인다','오른쪽 화살표 키를 누르고 있는 동안만 오른쪽으로 움직인다','키를 한 번 누르면 5만큼 움직이고 프로그램이 끝난다','아무 일도 일어나지 않는다'],
+ ans:1,exp:'"계속 반복" 안에서 매 순간 키가 눌렸는지 검사 → 누르고 있는 동안만 이동.'},
+{tp:'신호',type:'mc',q:'시작하기를 누르면 어떤 순서로 실행될까?',
+ objs:[{n:'엔트리봇',code:[S0,lk('{준비!} 을(를) {2} 초 동안 말하기'),st('[출발] 신호 보내기')]},{n:'고양이',code:[st('[출발] 신호를 받았을 때'),lk('{가자!} 을(를) 말하기')]}],
+ opts:['엔트리봇이 2초 동안 "준비!" → 그다음 고양이가 "가자!"','둘이 동시에 말한다','고양이만 "가자!"라고 말한다','고양이가 먼저 "가자!" → 엔트리봇이 "준비!"'],
+ ans:0,exp:'고양이는 "출발" 신호를 받아야 시작해. 신호는 엔트리봇이 2초 말한 뒤에 보내니까 엔트리봇이 먼저.'},
+{tp:'그리고/또는',type:'mc',q:'엔트리봇은 무엇을 말할까?',
+ code:[S0,dt('[점수] 를 {70} (으)로 정하기'),dt('[출석] 을 {8} (으)로 정하기'),fl('만일 ⟪⟪{[점수] 값} ≥ {60}⟫ 그리고 ⟪{[출석] 값} ≥ {10}⟫⟫ (이)라면',[lk('{합격} 을(를) 말하기')],[lk('{불합격} 을(를) 말하기')])],
+ opts:['합격','불합격'],ans:1,exp:'"그리고"는 둘 다 참이어야 참. 출석 8 ≥ 10이 거짓 → 불합격. 만약 "또는"이었다면 하나만 참이어도 되니까 합격.'},
+{tp:'변수 함정',type:'mc',q:'실행 후 a와 b의 값은?',
+ code:[S0,dt('[a] 를 {3} (으)로 정하기'),dt('[b] 를 {5} (으)로 정하기'),dt('[a] 를 {[b] 값} (으)로 정하기'),dt('[b] 를 {[a] 값} (으)로 정하기')],
+ opts:['a=5, b=3','a=5, b=5','a=3, b=3','a=3, b=5'],ans:1,exp:'a가 먼저 5로 바뀌어 버려서, b에 a 값(이미 5)을 넣으면 b도 5. 두 값을 바꾸려면 임시 변수가 하나 더 필요해.'},
+{tp:'몫·나머지',type:'num',q:'엔트리봇이 말하는 값은?',
+ code:[S0,lk('{{{17} / {5} 의 [몫]} + {{17} / {5} 의 [나머지]}} 을(를) 말하기')],
+ ans:5,exp:'17 ÷ 5 = 몫 3, 나머지 2 → 3 + 2 = 5.'},
+{tp:'리스트',type:'mc',q:'엔트리봇은 무엇을 말할까? (과일 리스트는 처음에 비어 있음)',
+ code:[S0,dt('{사과} 항목을 [과일] 에 추가하기'),dt('{바나나} 항목을 [과일] 에 추가하기'),dt('{포도} 항목을 [과일] 에 추가하기'),lk('{[과일] 의 {2} 번째 항목} 을(를) 말하기')],
+ opts:['사과','바나나','포도','오류'],ans:1,exp:'엔트리 리스트 번호는 1부터 시작! 1번 사과, 2번 바나나, 3번 포도.'},
+{tp:'리스트',type:'num',q:'엔트리봇이 말하는 값은? (목록 리스트는 처음에 비어 있음)',
+ code:[S0,fl('{3} 번 반복하기',[dt('{10} 항목을 [목록] 에 추가하기')]),dt('{1} 번째 항목을 [목록] 에서 삭제하기'),lk('{[목록] 항목 수} 을(를) 말하기')],
+ ans:2,exp:'3개 추가 → 1개 삭제 → 항목 수 2.'},
+{tp:'묻고 대답',type:'mc',q:'질문에 "민지"라고 입력하면 엔트리봇이 말하는 것은?',
+ code:[S0,dt('{이름이 뭐야?} 을(를) 묻고 대답 기다리기'),lk('{{안녕, } 과(와) {대답} 를 합치기} 을(를) 말하기')],
+ opts:['안녕, 대답','안녕, 민지','민지','이름이 뭐야?'],ans:1,exp:'"대답" 블록에는 사용자가 입력한 값(민지)이 들어 있어. 합치기로 글자를 이어 붙임.'},
+{tp:'반복+조건',type:'num',q:'실행 후 [짝수개수] 의 값은?',
+ code:[S0,dt('[짝수개수] 를 {0} (으)로 정하기'),dt('[i] 를 {1} (으)로 정하기'),fl('{10} 번 반복하기',[fl('만일 ⟪{{[i] 값} / {2} 의 [나머지]} = {0}⟫ (이)라면',[dt('[짝수개수] 에 {1} 만큼 더하기')]),dt('[i] 에 {1} 만큼 더하기')])],
+ ans:5,exp:'i가 1~10을 돌면서 짝수(2,4,6,8,10)일 때만 +1 → 5.'},
+{tp:'디버깅',type:'num',q:'1부터 10까지의 합(55)을 말하려고 만든 코드인데, 실제로 말하는 값은?',
+ code:[S0,dt('[합] 을 {0} (으)로 정하기'),dt('[i] 를 {1} (으)로 정하기'),fl('{10} 번 반복하기',[dt('[i] 에 {1} 만큼 더하기'),dt('[합] 에 {[i] 값} 만큼 더하기')]),lk('{[합] 값} 을(를) 말하기')],
+ ans:65,exp:'i를 먼저 올리고 더해서 2+3+…+11 = 65가 돼.'},
+{tp:'디버깅',type:'mc',q:'바로 앞 문제 코드가 55를 말하도록 고치는 방법은?',
+ code:[fl('{10} 번 반복하기',[dt('[i] 에 {1} 만큼 더하기'),dt('[합] 에 {[i] 값} 만큼 더하기')])],
+ opts:['반복 안 두 블록의 순서를 바꾼다','반복 횟수를 9번으로 바꾼다','[합]을 1로 시작한다','[i]에 2만큼 더하게 바꾼다'],
+ ans:0,exp:'"합에 i 더하기" → "i에 1 더하기" 순서면 1+2+…+10 = 55. (i를 0부터 시작해도 정답이 나와.)'},
+{tp:'붓·도형',type:'num',q:'정오각형을 그리려면 ? 자리에 몇 도를 넣어야 할까?',
+ code:[S0,br('그리기 시작하기'),fl('{5} 번 반복하기',[mv('이동 방향으로 {100} 만큼 움직이기'),mv('방향을 {?}° 만큼 회전하기')])],
+ ans:72,exp:'정다각형 회전 각도 = 360 ÷ 변의 수 → 360 ÷ 5 = 72. (정삼각형 120, 정사각형 90, 정육각형 60)'},
+{tp:'화면 끝',type:'mc',q:'이 코드는 어떻게 동작할까?',
+ code:[S0,fl('계속 반복하기',[mv('이동 방향으로 {5} 만큼 움직이기'),mv('화면 끝에 닿으면 튕기기')])],
+ opts:['벽에 닿으면 튕겨서 계속 왔다 갔다 한다','벽에 닿으면 멈춘다','한 번만 5만큼 움직인다','화면 밖으로 사라진다'],ans:0,exp:'계속 움직이다가 화면 끝에 닿을 때마다 방향이 반대로 바뀌어.'},
+{tp:'순서 맞추기',type:'order',q:'"3, 2, 1"을 1초씩 말한 뒤 "발사!"를 말하도록 블록을 순서대로 눌러 쌓아봐.',
+ items:[{b:S0},{b:dt('[카운트] 를 {3} (으)로 정하기')},{b:fl('{3} 번 반복하기')},{b:lk('{[카운트] 값} 을(를) {1} 초 동안 말하기'),i:1},{b:dt('[카운트] 에 {-1} 만큼 더하기'),i:1},{b:lk('{발사!} 을(를) 말하기')}],
+ exp:'말하기 → 1 빼기 순서여야 3,2,1이 나와. 순서가 반대면 2,1,0을 말해.'}
+];
+
+// ---------- lab data ----------
+const L=[
+{t:'① 방향키로 캐릭터 움직이기',d:'방향키(↑↓←→)를 누르면 캐릭터가 그 방향으로 움직이게 만들어 봐.',req:['계속 반복하기 사용','만일 ~라면 4개로 키 검사'],
+ code:[S0,fl('계속 반복하기',[fl('만일 ⟪[오른쪽 화살표] 키가 눌러져 있는가?⟫ (이)라면',[mv('x 좌표를 {5} 만큼 바꾸기')]),fl('만일 ⟪[왼쪽 화살표] 키가 눌러져 있는가?⟫ (이)라면',[mv('x 좌표를 {-5} 만큼 바꾸기')]),fl('만일 ⟪[위쪽 화살표] 키가 눌러져 있는가?⟫ (이)라면',[mv('y 좌표를 {5} 만큼 바꾸기')]),fl('만일 ⟪[아래쪽 화살표] 키가 눌러져 있는가?⟫ (이)라면',[mv('y 좌표를 {-5} 만큼 바꾸기')])])],
+ note:'"q 키를 눌렀을 때" 시작 블록을 키마다 4개 써도 돼. 다만 위 방식이 더 부드럽게 움직여.'},
+{t:'② 업다운 숫자 맞히기 게임',d:'1~100 사이 무작위 수를 정하고, 맞힐 때까지 UP/DOWN을 알려준 뒤 몇 번 만에 맞혔는지 말해.',req:['무작위 수','~이 될 때까지 반복하기','묻고 대답 기다리기','변수 2개(정답, 시도)'],
+ code:[S0,dt('[정답] 을 {{1} 부터 {100} 사이의 무작위 수} (으)로 정하기'),dt('[시도] 를 {0} (으)로 정하기'),fl('⟪{대답} = {[정답] 값}⟫ 이 될 때까지 반복하기',[dt('{숫자를 맞혀봐!} 을(를) 묻고 대답 기다리기'),dt('[시도] 에 {1} 만큼 더하기'),fl('만일 ⟪{대답} > {[정답] 값}⟫ (이)라면',[lk('{DOWN} 을(를) {1} 초 동안 말하기')]),fl('만일 ⟪{대답} < {[정답] 값}⟫ (이)라면',[lk('{UP} 을(를) {1} 초 동안 말하기')])]),lk('{{정답! 시도 횟수: } 과(와) {[시도] 값} 를 합치기} 을(를) 말하기')],
+ note:'"~이 될 때까지 반복"은 조건을 먼저 검사해. 처음엔 대답이 비어 있어서 반복 안으로 들어가.'},
+{t:'③ 구구단 출력기',d:'몇 단인지 물어보고, 그 단의 1~9 결과를 1초씩 차례로 말해.',req:['묻고 대답 기다리기','변수 i','9번 반복하기'],
+ code:[S0,dt('{몇 단?} 을(를) 묻고 대답 기다리기'),dt('[단] 을 {대답} (으)로 정하기'),dt('[i] 를 {1} (으)로 정하기'),fl('{9} 번 반복하기',[lk('{{[단] 값} × {[i] 값}} 을(를) {1} 초 동안 말하기'),dt('[i] 에 {1} 만큼 더하기')])],
+ note:'"3 × 1 = 3"처럼 보여주려면 "합치기" 블록을 여러 개 겹쳐서 글자를 이어 붙여.'},
+{t:'④ 점수 → 등급 변환',d:'점수를 입력받아 90 이상 A, 80 이상 B, 70 이상 C, 나머지 D를 말해.',req:['만일 ~라면 / 아니면 중첩','≥ 비교 블록'],
+ code:[S0,dt('{점수를 입력하세요} 을(를) 묻고 대답 기다리기'),fl('만일 ⟪{대답} ≥ {90}⟫ (이)라면',[lk('{A} 을(를) 말하기')],[fl('만일 ⟪{대답} ≥ {80}⟫ (이)라면',[lk('{B} 을(를) 말하기')],[fl('만일 ⟪{대답} ≥ {70}⟫ (이)라면',[lk('{C} 을(를) 말하기')],[lk('{D} 을(를) 말하기')])])])],
+ note:'큰 기준(90)부터 검사하는 게 핵심. 70부터 검사하면 95점도 C가 돼버려.'},
+{t:'⑤ 클릭 점수 게임',d:'오브젝트를 클릭할 때마다 점수가 1씩 오르고 모양이 바뀌어. 10점이 되면 "성공!"을 말하고 멈춰.',req:['오브젝트를 클릭했을 때','변수','모든 코드 멈추기'],
+ code:[S0,dt('[점수] 를 {0} (으)로 정하기'),st('오브젝트를 클릭했을 때'),dt('[점수] 에 {1} 만큼 더하기'),lk('다음 모양으로 바꾸기'),fl('만일 ⟪{[점수] 값} = {10}⟫ (이)라면',[lk('{성공!} 을(를) 말하기'),fl('[모든] 코드 멈추기')])],
+ note:'실제로는 시작 블록이 2개라서 두 덩어리로 따로 놓으면 돼. 점수 변수 "보이기"를 켜두면 화면에서 확인 가능.'},
+{t:'⑥ 정다각형 그리기',d:'변의 수를 입력받아 그 정다각형을 붓으로 그려.',req:['붓: 그리기 시작하기','반복 횟수에 대답 넣기','360 / 대답'],
+ code:[S0,dt('{변의 수는?} 을(를) 묻고 대답 기다리기'),br('그리기 시작하기'),fl('{대답} 번 반복하기',[mv('이동 방향으로 {80} 만큼 움직이기'),mv('방향을 {{360} / {대답}}° 만큼 회전하기')])],
+ note:'회전 각도 = 360 ÷ 변의 수. 시작 전에 "모든 붓 지우기"를 넣으면 다시 그릴 때 깔끔해.'}
+];
+
+// ---------- quiz engine ----------
+let qi=0,score=0,answered=false,sel=null,wrong=[],queue=Q.map((_,i)=>i),orderPick=[];
+const app=document.getElementById('app');
+function shuffle(a){a=a.slice();for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]]}return a}
+function renderQuiz(){
+  if(qi>=queue.length) return renderDone();
+  const p=Q[queue[qi]];answered=false;sel=null;orderPick=[];
+  let h=`<div class="card"><div class="meta"><span class="chip">${p.tp}</span><span>${qi+1} / ${queue.length} · 맞힌 개수 ${score}</span></div>
+  <div class="bar"><i style="width:${qi/queue.length*100}%"></i></div><div class="q">${p.q}</div>`;
+  if(p.code||p.objs) h+=codeHTML(p);
+  if(p.type==='mc') h+=`<div class="opts">${p.opts.map((o,i)=>`<button class="opt" data-i="${i}">${String.fromCharCode(9312+i)} ${o}</button>`).join('')}</div>`;
+  if(p.type==='num') h+=`<input class="num" id="numIn" type="number" inputmode="numeric" placeholder="숫자 입력">`;
+  if(p.type==='order'){p._sh=shuffle(p.items.map((_,i)=>i));h+=`<div class="lbl">내 코드 (누르면 빼기)</div><div class="ansbox" id="abox"></div><div class="lbl">블록 (누른 순서대로 쌓임 · ↳ 는 반복 안에 들어가는 블록)</div><div class="pool" id="pool"></div>`}
+  h+=`<div id="fb"></div><div class="btns"><button class="btn" id="go">정답 확인</button></div></div>`;
+  app.innerHTML=h;
+  if(p.type==='mc') app.querySelectorAll('.opt').forEach(b=>b.onclick=()=>{if(answered)return;app.querySelectorAll('.opt').forEach(x=>x.classList.remove('sel'));b.classList.add('sel');sel=+b.dataset.i});
+  if(p.type==='num'){const n=document.getElementById('numIn');n.onkeydown=e=>{if(e.key==='Enter')check()}}
+  if(p.type==='order') drawOrder(p);
+  document.getElementById('go').onclick=()=>answered?next():check();
+}
+function ordItem(p,i,num){const it=p.items[i];return `<div class="ord${it.i?' ind':''}" data-i="${i}">${num?`<span class="n">${num}</span>`:''}${it.i?'↳ ':''}${rb(it.b)}</div>`}
+function drawOrder(p){
+  const pool=document.getElementById('pool'),ab=document.getElementById('abox');
+  ab.innerHTML=orderPick.map((i,k)=>ordItem(p,i,k+1)).join('')||'<span style="color:#98a2b3;font-size:13px">아래 블록을 눌러 쌓아봐</span>';
+  pool.innerHTML=p._sh.filter(i=>!orderPick.includes(i)).map(i=>ordItem(p,i)).join('');
+  if(answered)return;
+  pool.querySelectorAll('.ord').forEach(d=>d.onclick=()=>{orderPick.push(+d.dataset.i);drawOrder(p)});
+  ab.querySelectorAll('.ord').forEach(d=>d.onclick=()=>{orderPick=orderPick.filter(x=>x!==+d.dataset.i);drawOrder(p)});
+}
+function check(){
+  const p=Q[queue[qi]];let ok,ansTxt;
+  if(p.type==='mc'){if(sel===null)return;ok=sel===p.ans;ansTxt=String.fromCharCode(9312+p.ans)+' '+p.opts[p.ans];
+    app.querySelectorAll('.opt').forEach((b,i)=>{if(i===p.ans)b.classList.add('right');else if(i===sel)b.classList.add('wrong')})}
+  if(p.type==='num'){const v=document.getElementById('numIn').value.trim();if(v==='')return;ok=Number(v)===p.ans;ansTxt=p.ans}
+  if(p.type==='order'){if(orderPick.length<p.items.length)return;ok=orderPick.every((v,i)=>v===i);ansTxt='아래 순서'}
+  answered=true;if(ok)score++;else wrong.push(queue[qi]);
+  let fb=`<div class="fb ${ok?'ok':'no'}"><b>${ok?'⭕ 정답!':'❌ 오답 — 정답: '+ansTxt}</b>${p.exp}</div>`;
+  if(p.type==='order'&&!ok) fb+=`<div class="code" style="margin-top:10px">${p.items.map((_,i)=>ordItem(p,i,i+1)).join('')}</div>`;
+  document.getElementById('fb').innerHTML=fb;
+  if(p.type==='order') drawOrder(p);
+  document.getElementById('go').textContent=qi+1<queue.length?'다음 문제 →':'결과 보기';
+}
+function next(){qi++;renderQuiz();window.scrollTo(0,0)}
+function renderDone(){
+  const pct=Math.round(score/queue.length*100);
+  app.innerHTML=`<div class="card done"><div>결과</div><div class="big">${score} / ${queue.length}</div><div>${pct>=90?'완벽해! 실습 과제로 넘어가자 🔥':pct>=70?'좋아! 틀린 것만 한 번 더 보자':'개념 정리 탭 보고 다시 도전!'}</div>
+  <div class="btns">${wrong.length?`<button class="btn" id="rw">틀린 ${wrong.length}문제 다시</button>`:''}<button class="btn ghost" id="ra">처음부터</button></div></div>`;
+  const rw=document.getElementById('rw');if(rw)rw.onclick=()=>{queue=wrong.slice();wrong=[];qi=0;score=0;renderQuiz()};
+  document.getElementById('ra').onclick=()=>{queue=Q.map((_,i)=>i);wrong=[];qi=0;score=0;renderQuiz()};
+}
+
+// ---------- lab ----------
+function renderLab(){
+  app.innerHTML=`<div class="card" style="font-size:14px">👉 <a href="https://playentry.org/ws" target="_blank" rel="noopener">엔트리 만들기(playentry.org)</a>를 열고 직접 만들어 본 다음, 막히면 힌트·정답을 펼쳐봐.</div>`+
+  L.map((x,i)=>`<div class="card task"><h3>${x.t}</h3><p>${x.d}</p><div class="lbl">써야 할 것</div><ul class="req">${x.req.map(r=>`<li>${r}</li>`).join('')}</ul>
+  <details><summary>정답 코드 보기</summary>${codeHTML(x)}<div class="note">💡 ${x.note}</div></details>
+  <label class="chk"><input type="checkbox"> 직접 만들어서 실행해봤음</label></div>`).join('');
+}
+
+// ---------- summary ----------
+function renderSum(){
+  const cats=[['#00b400','시작','시작하기 클릭/키/오브젝트 클릭했을 때, 신호 보내기·받기'],['#19baea','흐름','기다리기, ~번 반복, 계속 반복, ~될 때까지 반복, 만일~라면/아니면, 멈추기'],['#a751e3','움직임','x·y 좌표 바꾸기, 위치로 이동, 방향 회전, 화면 끝 튕기기'],['#ec4466','생김새','말하기, 모양 바꾸기, 보이기/숨기기'],['#fc7e01','붓','그리기 시작하기, 붓 지우기, 색 바꾸기'],['#e8a400','계산','사칙연산, 몫/나머지, 무작위 수, 합치기'],['#4562f5','판단','= > < ≥, 키 눌림, ~에 닿았는가, 그리고/또는/아니다'],['#e457dc','자료','변수 정하기/더하기, 리스트, 묻고 대답 기다리기']];
+  app.innerHTML=`<div class="card"><h3 style="margin:0 0 8px">블록 꾸러미</h3><table>${cats.map(c=>`<tr><td style="white-space:nowrap"><span class="dot" style="background:${c[0]}"></span><b>${c[1]}</b></td><td>${c[2]}</td></tr>`).join('')}</table></div>
+  <div class="card"><h3 style="margin:0 0 8px">반복 3종 비교</h3><table><tr><th>블록</th><th>언제 씀</th></tr>
+  <tr><td>~번 반복하기</td><td>횟수를 정확히 알 때 (도형, 카운트다운)</td></tr>
+  <tr><td>계속 반복하기</td><td>게임처럼 계속 검사해야 할 때 (키 입력, 충돌)</td></tr>
+  <tr><td>~이 될 때까지 반복</td><td>조건이 <b>참이 되면 멈춤</b> (맞힐 때까지)</td></tr></table></div>
+  <div class="card"><h3 style="margin:0 0 8px">시험에 잘 나오는 포인트</h3><ul class="tips">
+  <li><b>정하기 vs 더하기</b>: 정하기는 덮어쓰기, 더하기는 누적. 빼기는 "−1 만큼 더하기"</li>
+  <li><b>짝수/홀수</b>: (수 / 2 의 나머지) = 0 이면 짝수</li>
+  <li><b>리스트 번호는 1부터</b> 시작</li>
+  <li><b>그리고</b> = 둘 다 참, <b>또는</b> = 하나만 참이어도 OK</li>
+  <li><b>정다각형 회전각</b> = 360 ÷ 변의 수</li>
+  <li><b>블록 순서</b>가 결과를 바꿈 (더하고 증가 vs 증가하고 더하기)</li>
+  <li><b>대답</b> 블록 = 마지막으로 입력한 값</li>
+  <li><b>신호</b>: 다른 오브젝트에게 "이제 시작해" 알리는 용도</li>
+  <li><b>등급 나누기</b>는 큰 기준부터 검사</li>
+  <li>반복 안에서 <b>변수 초기화</b>(0으로 정하기)를 하면 매번 리셋되니 반복 <b>밖</b>에 둘 것</li>
+  </ul></div>`;
+}
+
+// ---------- tabs ----------
+const views={quiz:renderQuiz,lab:renderLab,sum:renderSum};
+document.querySelectorAll('.tab').forEach(t=>t.onclick=()=>{document.querySelectorAll('.tab').forEach(x=>x.classList.remove('on'));t.classList.add('on');views[t.dataset.t]();window.scrollTo(0,0)});
+renderQuiz();
+</script>
+</body>
+</html>
